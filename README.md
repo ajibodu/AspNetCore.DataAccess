@@ -1,5 +1,5 @@
 # AspNetCoreLibrary.DataAccess
-DataAccess
+Simple and eazy way to access most of your database with just few lines of code
 
 ### Initialize client
 `DataAccessSybase<ResponseObj> client;`  
