@@ -11,7 +11,6 @@ namespace DataAccess.Implementation
     {
         public AseCommand Comm;
         private readonly AseConnection _conn;
-        private readonly SharedUtil _util;
 
         /// <summary>
         /// 
@@ -25,8 +24,6 @@ namespace DataAccess.Implementation
             Comm.CommandTimeout = 0;
             Comm.Connection = _conn;
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-            _util = new SharedUtil();
         }
 
         /// <summary>
@@ -48,7 +45,7 @@ namespace DataAccess.Implementation
                 var adapter = new AseDataAdapter(Comm);
                 adapter.Fill(resultTable);
 
-                var returnObject = _util.convertDataTable<TRespObj>(resultTable);
+                var returnObject = SharedUtil.ConvertDataTable<TRespObj>(resultTable);
                 return returnObject;
             }
             finally

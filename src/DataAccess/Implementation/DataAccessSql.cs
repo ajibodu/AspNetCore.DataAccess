@@ -10,7 +10,6 @@ namespace DataAccess.Implementation
     {
         public SqlCommand Comm;
         private readonly SqlConnection _conn;
-        private readonly SharedUtil _util;
 
         /// <summary>
         /// 
@@ -22,8 +21,6 @@ namespace DataAccess.Implementation
             Comm = new SqlCommand();
             Comm.CommandTimeout = 0;
             Comm.Connection = _conn;
-            
-            _util = new SharedUtil();
         }
         
         /// <summary>
@@ -45,7 +42,7 @@ namespace DataAccess.Implementation
                 var adapter = new SqlDataAdapter(Comm);
                 adapter.Fill(resultTable);
 
-                var returnObject = _util.convertDataTable<TRespObj>(resultTable);
+                var returnObject = SharedUtil.ConvertDataTable<TRespObj>(resultTable);
                 return returnObject;
             }
             finally
@@ -88,7 +85,7 @@ namespace DataAccess.Implementation
         /// <returns></returns>
         public TRespObj ExecuteScalar<TRespObj>(string query, CommandType commandType = CommandType.Text, bool closeConnection = true)
         {
-            Comm.CommandText = query.ToString();
+            Comm.CommandText = query;
             Comm.CommandType = commandType;
             try
             {
