@@ -9,8 +9,7 @@ namespace DataAccess.Implementation
     public class DataAccessAll : IDataAccess
     {
         public IDbCommand Comm;
-        private readonly DbConnection _conn;
-        private readonly SharedUtil _util;             
+        private readonly DbConnection _conn;         
 
         /// <summary>
         /// 
@@ -22,8 +21,6 @@ namespace DataAccess.Implementation
             Comm = dbInstance.CreateCommand();
             Comm.CommandTimeout = 0;
             Comm.Connection = _conn;
-            
-            _util = new SharedUtil();
         }
 
         /// <summary>
@@ -45,7 +42,7 @@ namespace DataAccess.Implementation
                 var adapter = CreateDataAdapter(_conn);
                 adapter.Fill(resultTable);
 
-                var returnObject = _util.convertDataTable<TRespObj>(resultTable);
+                var returnObject = SharedUtil.ConvertDataTable<TRespObj>(resultTable);
                 return returnObject;
             }
             finally

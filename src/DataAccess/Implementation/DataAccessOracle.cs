@@ -10,7 +10,6 @@ namespace DataAccess.Implementation
     {
         public OracleCommand Comm;
         private readonly OracleConnection _conn;
-        private readonly SharedUtil _util;
         /// <summary>
         /// 
         /// </summary>
@@ -21,8 +20,6 @@ namespace DataAccess.Implementation
             Comm = new OracleCommand();
             Comm.CommandTimeout = 0;
             Comm.Connection = _conn;
-            
-            _util = new SharedUtil();
         }
 
         /// <summary>
@@ -44,7 +41,7 @@ namespace DataAccess.Implementation
                 var adapter = new OracleDataAdapter(Comm);
                 adapter.Fill(resultTable);
 
-                var returnObject = _util.convertDataTable<TRespObj>(resultTable);
+                var returnObject = SharedUtil.ConvertDataTable<TRespObj>(resultTable);
                 return returnObject;
             }
             finally

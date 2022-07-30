@@ -9,71 +9,46 @@ namespace DataAccess.Implementation
 {
     public class SharedUtil
     {
-        public List<T> convertDataTable<T>(DataTable dt)
+        public static List<T> ConvertDataTable<T>(DataTable dt)
         {
-            List<T> data = new List<T>();
-            try
-            {
-                foreach (DataRow row in dt.Rows)
-                {
-                    T item = GetItem<T>(row);
-                    data.Add(item);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
-
-            return data;
+            return (from DataRow row in dt.Rows select GetItem<T>(row)).ToList();
         }
         private static T GetItem<T>(DataRow dr)
         {
-            Type temp = typeof(T);
-            T obj = Activator.CreateInstance<T>();
-            try
+            var temp = typeof(T);
+            var obj = Activator.CreateInstance<T>();
+            foreach (DataColumn column in dr.Table.Columns)
             {
-                foreach (DataColumn column in dr.Table.Columns)
+                foreach (var pro in temp.GetProperties())
                 {
-                    foreach (PropertyInfo pro in temp.GetProperties())
-                    {
-                        string displayName = string.Empty;
-                        var attribute = pro.GetCustomAttributes(typeof(DisplayNameAttribute), true)
-                                                .Cast<DisplayNameAttribute>().FirstOrDefault();
-                        if (attribute != null)
-                            displayName = attribute.DisplayName.ToLower();
+                    var displayName = string.Empty;
+                    var attribute = pro.GetCustomAttributes(typeof(DisplayNameAttribute), true)
+                        .Cast<DisplayNameAttribute>().FirstOrDefault();
+                    if (attribute != null)
+                        displayName = attribute.DisplayName.ToLower();
 
-                        if (pro.Name.ToLower() == column.ColumnName.ToLower() || displayName == column.ColumnName.ToLower())
-                        {
-                            if (dr[column.ColumnName] != DBNull.Value)
-                            {
-                                pro.SetValue(obj, dr[column.ColumnName], null);
-                            }
-                            else
-                            {
-                                Type typ = dr.GetType();
-                                var defValue = GetDefaultValue(typ);
-                                pro.SetValue(obj, defValue, null);
-                            }
-                            break;
-                        }
-                        else
-                            continue;
+                    if (!string.Equals(pro.Name, column.ColumnName, StringComparison.CurrentCultureIgnoreCase) && displayName != column.ColumnName.ToLower()) 
+                        continue;
+                    
+                    if (dr[column.ColumnName] != DBNull.Value)
+                    {
+                        pro.SetValue(obj, dr[column.ColumnName], null);
                     }
+                    else
+                    {
+                        var typ = dr.GetType();
+                        var defValue = GetDefaultValue(typ);
+                        pro.SetValue(obj, defValue, null);
+                    }
+                    break;
                 }
             }
-            catch (Exception ex)
-            {
-                throw;
-            }
+
             return obj;
         }
         private static object GetDefaultValue(Type t)
         {
-            if (t.IsValueType)
-                return Activator.CreateInstance(t);
-
-            return null;
+            return t.IsValueType ? Activator.CreateInstance(t) : null;
         }
     }
 }
