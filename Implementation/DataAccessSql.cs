@@ -6,29 +6,23 @@ using System.Data.SqlClient;
 
 namespace DataAccess.Implementation
 {
-    public class DataAccessSql<RespObj> : IDataAccess<RespObj>
+    public class DataAccessSql : IDataAccess
     {
-        public SqlCommand comm;
-        private SqlConnection _conn;
-        private SharedUtil _util;
+        public SqlCommand Comm;
+        private readonly SqlConnection _conn;
+        private readonly SharedUtil _util;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="connection"></param>
-        /// <param name="connect"></param>
-        public DataAccessSql(string connection, bool connect = false)
+        internal DataAccessSql(string connection)
         {
             _conn = new SqlConnection(connection);
-            comm = new SqlCommand();
-            comm.CommandTimeout = 0;
-            comm.Connection = _conn;
+            Comm = new SqlCommand();
+            Comm.CommandTimeout = 0;
+            Comm.Connection = _conn;
             
-            if (connect)
-            {
-                if (_conn.State != ConnectionState.Open)
-                    _conn.Open();
-            }
             _util = new SharedUtil();
         }
         
@@ -39,34 +33,25 @@ namespace DataAccess.Implementation
         /// <param name="commandType"></param>
         /// <param name="closeConnection"></param>
         /// <returns></returns>
-        public List<RespObj> ExecuteReader(string query, CommandType commandType = CommandType.Text, bool closeConnection = true)
+        public List<TRespObj> ExecuteReader<TRespObj>(string query, CommandType commandType = CommandType.Text, bool closeConnection = true)
         {
-            comm.CommandText = query.ToString();
-            comm.CommandType = commandType;
-            DataTable resultTable = new DataTable();
+            Comm.CommandText = query;
+            Comm.CommandType = commandType;
+            var resultTable = new DataTable();
             try
             {
                 if (_conn.State != ConnectionState.Open)
                     _conn.Open();
-                SqlDataAdapter Adapter = new SqlDataAdapter(comm);
-                Adapter.Fill(resultTable);
+                var adapter = new SqlDataAdapter(Comm);
+                adapter.Fill(resultTable);
 
-                List<RespObj> ReturnObject = _util.convertDataTable<RespObj>(resultTable);
-                return ReturnObject;
-            }
-            catch (Exception ex)
-            {
-                throw;
+                var returnObject = _util.convertDataTable<TRespObj>(resultTable);
+                return returnObject;
             }
             finally
             {
-                comm = new SqlCommand();
                 if (closeConnection)
-                {
-                    comm.Dispose();
-                    if (_conn.State != ConnectionState.Closed)
-                        _conn.Close();
-                }
+                    CloseConnection();
             }
         }
 
@@ -79,27 +64,18 @@ namespace DataAccess.Implementation
         /// <returns></returns>
         public int ExecuteNonQuery(string query, CommandType commandType = CommandType.Text, bool closeConnection = true)
         {
-            comm.CommandText = query.ToString();
-            comm.CommandType = commandType;
+            Comm.CommandText = query.ToString();
+            Comm.CommandType = commandType;
             try
             {
                 if (_conn.State != ConnectionState.Open)
                     _conn.Open();
-                return comm.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                throw;
+                return Comm.ExecuteNonQuery();
             }
             finally
             {
-                comm = new SqlCommand();
                 if (closeConnection)
-                {
-                    comm.Dispose();
-                    if (_conn.State != ConnectionState.Closed)
-                        _conn.Close();
-                }
+                    CloseConnection();
             }
         }
 
@@ -110,38 +86,30 @@ namespace DataAccess.Implementation
         /// <param name="commandType"></param>
         /// <param name="closeConnection"></param>
         /// <returns></returns>
-        public RespObj ExecuteScalar(string query, CommandType commandType = CommandType.Text, bool closeConnection = true)
+        public TRespObj ExecuteScalar<TRespObj>(string query, CommandType commandType = CommandType.Text, bool closeConnection = true)
         {
-            comm.CommandText = query.ToString();
-            comm.CommandType = commandType;
+            Comm.CommandText = query.ToString();
+            Comm.CommandType = commandType;
             try
             {
                 if (_conn.State != ConnectionState.Open)
                     _conn.Open();
-                return (RespObj)comm.ExecuteScalar();
-            }
-            catch (Exception ex)
-            {
-                throw;
+                return (TRespObj)Comm.ExecuteScalar();
             }
             finally
             {
-                comm = new SqlCommand();
                 if (closeConnection)
-                {
-                    comm.Dispose();
-                    if (_conn.State != ConnectionState.Closed)
-                        _conn.Close();
-                }
+                    CloseConnection();
             }
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public void CloseConnection()
+        private void CloseConnection()
         {
-            comm.Dispose();
+            Comm = new SqlCommand();
+            Comm.Dispose();
             if (_conn.State != ConnectionState.Closed)
                 _conn.Close();
         }

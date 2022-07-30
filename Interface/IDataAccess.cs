@@ -7,10 +7,10 @@ using System.Data.Common;
 
 namespace DataAccess.Interface
 {
-    public interface IDataAccess<RespObj>
+    public interface IDataAccess
     {
-        List<RespObj> ExecuteReader(string query, CommandType commandType = CommandType.Text, bool closeConnection = true);
+        List<RespObj> ExecuteReader<RespObj>(string query, CommandType commandType = CommandType.Text, bool closeConnection = true);
         int ExecuteNonQuery(string query, CommandType commandType = CommandType.Text, bool closeConnection = true);
-        RespObj ExecuteScalar(string query, CommandType commandType = CommandType.Text, bool closeConnection = true);
+        RespObj ExecuteScalar<RespObj>(string query, CommandType commandType = CommandType.Text, bool closeConnection = true);
     }
 }

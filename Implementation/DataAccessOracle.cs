@@ -6,26 +6,22 @@ using System.Data;
 
 namespace DataAccess.Implementation
 {
-    public class DataAccessOracle<RespObj> : IDataAccess<RespObj>
+    public class DataAccessOracle : IDataAccess
     {
-        public OracleCommand comm;
-        private OracleConnection _conn;
-        private SharedUtil _util;
+        public OracleCommand Comm;
+        private readonly OracleConnection _conn;
+        private readonly SharedUtil _util;
         /// <summary>
         /// 
         /// </summary>
         /// <param name="connection"></param>
-        public DataAccessOracle(string connection, bool connect = false)
+        internal DataAccessOracle(string connection)
         {
             _conn = new OracleConnection(connection);
-            comm = new OracleCommand();
-            comm.CommandTimeout = 0;
-            comm.Connection = _conn;
-            if (connect)
-            {
-                if (_conn.State != ConnectionState.Open)
-                    _conn.Open();
-            }
+            Comm = new OracleCommand();
+            Comm.CommandTimeout = 0;
+            Comm.Connection = _conn;
+            
             _util = new SharedUtil();
         }
 
@@ -36,34 +32,25 @@ namespace DataAccess.Implementation
         /// <param name="commandType"></param>
         /// <param name="closeConnection"></param>
         /// <returns></returns>
-        public List<RespObj> ExecuteReader(string query, CommandType commandType = CommandType.Text, bool closeConnection = true)
+        public List<TRespObj> ExecuteReader<TRespObj>(string query, CommandType commandType = CommandType.Text, bool closeConnection = true)
         {
-            comm.CommandText = query.ToString();
-            comm.CommandType = commandType;
-            DataTable resultTable = new DataTable();
+            Comm.CommandText = query.ToString();
+            Comm.CommandType = commandType;
+            var resultTable = new DataTable();
             try
             {
                 if (_conn.State != ConnectionState.Open)
                     _conn.Open();
-                OracleDataAdapter Adapter = new OracleDataAdapter(comm);
-                Adapter.Fill(resultTable);
+                var adapter = new OracleDataAdapter(Comm);
+                adapter.Fill(resultTable);
 
-                List<RespObj> ReturnObject = _util.convertDataTable<RespObj>(resultTable);
-                return ReturnObject;
-            }
-            catch (Exception ex)
-            {
-                throw;
+                var returnObject = _util.convertDataTable<TRespObj>(resultTable);
+                return returnObject;
             }
             finally
             {
-                comm = new OracleCommand();
-                if (closeConnection)
-                {
-                    comm.Dispose();
-                    if (_conn.State != ConnectionState.Closed)
-                        _conn.Close();
-                }
+                if (closeConnection) 
+                    CloseConnection();
             }
         }
 
@@ -76,27 +63,18 @@ namespace DataAccess.Implementation
         /// <returns></returns>
         public int ExecuteNonQuery(string query, CommandType commandType = CommandType.Text, bool closeConnection = true)
         {
-            comm.CommandText = query.ToString();
-            comm.CommandType = commandType;
+            Comm.CommandText = query;
+            Comm.CommandType = commandType;
             try
             {
                 if (_conn.State != ConnectionState.Open)
                     _conn.Open();
-                return comm.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                throw;
+                return Comm.ExecuteNonQuery();
             }
             finally
             {
-                comm = new OracleCommand();
-                if (closeConnection)
-                {
-                    comm.Dispose();
-                    if (_conn.State != ConnectionState.Closed)
-                        _conn.Close();
-                }
+                if (closeConnection) 
+                    CloseConnection();
             }
         }
 
@@ -107,38 +85,30 @@ namespace DataAccess.Implementation
         /// <param name="commandType"></param>
         /// <param name="closeConnection"></param>
         /// <returns></returns>
-        public RespObj ExecuteScalar(string query, CommandType commandType = CommandType.Text, bool closeConnection = true)
+        public TRespObj ExecuteScalar<TRespObj>(string query, CommandType commandType = CommandType.Text, bool closeConnection = true)
         {
-            comm.CommandText = query.ToString();
-            comm.CommandType = commandType;
+            Comm.CommandText = query;
+            Comm.CommandType = commandType;
             try
             {
                 if (_conn.State != ConnectionState.Open)
                     _conn.Open();
-                return (RespObj)comm.ExecuteScalar();
-            }
-            catch (Exception ex)
-            {
-                throw;
+                return (TRespObj)Comm.ExecuteScalar();
             }
             finally
             {
-                comm = new OracleCommand();
-                if (closeConnection)
-                {
-                    comm.Dispose();
-                    if (_conn.State != ConnectionState.Closed)
-                        _conn.Close();
-                }
+                if (closeConnection) 
+                    CloseConnection();
             }
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public void CloseConnection()
+        private void CloseConnection()
         {
-            comm.Dispose();
+            Comm = new OracleCommand();
+            Comm.Dispose();
             if (_conn.State != ConnectionState.Closed)
                 _conn.Close();
         }
